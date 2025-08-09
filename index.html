@@ -9,7 +9,12 @@
 <body>
     <nav class="nav-container">
         <div class="nav-content">
-            <div class="nav-title">Software Development Agreement</div>
+            <div class="nav-title">Kaorium Contract</div>
+            <button class="mobile-menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
             <div class="nav-links">
                 <a href="#scope">Scope</a>
                 <a href="#timeline">Timeline</a>
@@ -47,6 +52,7 @@
             <div class="subsection">
                 <h3>1.1 Project Description</h3>
                 <p>The Developer agrees to design, develop, and deliver a Minimum Viable Product (MVP) Customer Relationship Management (CRM) system for the Client as detailed in the Statement of Work dated 14 July 2025.</p>
+                <p>View the full Statement of Work: <a href="https://kaoriumsow.netlify.app/" target="_blank" style="color: var(--primary-purple); font-weight: 600; text-decoration: underline;">https://kaoriumsow.netlify.app/</a></p>
             </div>
 
             <div class="subsection">
@@ -546,41 +552,6 @@
         </div>
     </footer>
 
-    <script>
-        // Smooth scrolling for navigation links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
-        });
-
-        // Add active class to nav links on scroll
-        window.addEventListener('scroll', () => {
-            let current = '';
-            const sections = document.querySelectorAll('section[id]');
-            
-            sections.forEach(section => {
-                const sectionTop = section.offsetTop;
-                const sectionHeight = section.clientHeight;
-                if (window.scrollY >= (sectionTop - 100)) {
-                    current = section.getAttribute('id');
-                }
-            });
-
-            document.querySelectorAll('.nav-links a').forEach(link => {
-                link.classList.remove('active');
-                if (link.getAttribute('href').slice(1) === current) {
-                    link.classList.add('active');
-                }
-            });
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
