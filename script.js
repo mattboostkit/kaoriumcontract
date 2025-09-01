@@ -392,6 +392,86 @@ document.addEventListener('DOMContentLoaded', function() {
             pdf.save('Software-Development-Agreement-SCENTMATIC.pdf');
         });
     }
+
+    // Download client-signable HTML
+    const downloadHtmlBtn = document.getElementById('download-client-html-btn');
+    if (downloadHtmlBtn) {
+        downloadHtmlBtn.addEventListener('click', function() {
+            // Take current DOM snapshot but ensure client area is ready to sign and developer is embedded
+            try {
+                const docClone = document.documentElement.cloneNode(true);
+
+                // Ensure developer signature is embedded (image shown, canvas hidden)
+                const devSigData = localStorage.getItem('devSignature');
+                const devDate = localStorage.getItem('devSignedDate');
+                const devImgClone = docClone.querySelector('#dev-sign-img');
+                const devCanvasClone = docClone.querySelector('#dev-sign-canvas');
+                const devDateSpanClone = docClone.querySelector('#dev-date');
+                const devClearBtnClone = docClone.querySelector('#dev-clear-btn');
+                const devConfirmBtnClone = docClone.querySelector('#dev-confirm-btn');
+                if (devSigData && devImgClone && devCanvasClone) {
+                    devImgClone.setAttribute('src', devSigData);
+                    devImgClone.setAttribute('style', 'display:block;');
+                    devCanvasClone.setAttribute('style', 'display:none;');
+                }
+                if (devDate && devDateSpanClone) {
+                    devDateSpanClone.textContent = devDate;
+                }
+                if (devClearBtnClone) devClearBtnClone.setAttribute('disabled', 'disabled');
+                if (devConfirmBtnClone) devConfirmBtnClone.setAttribute('disabled', 'disabled');
+
+                // Client area: keep canvas active for signing, enable inputs
+                const clientImgClone = docClone.querySelector('#client-sign-img');
+                const clientCanvasClone = docClone.querySelector('#client-sign-canvas');
+                const clientClearBtnClone = docClone.querySelector('#client-clear-btn');
+                const clientConfirmBtnClone = docClone.querySelector('#client-confirm-btn');
+                const clientDateSpanClone = docClone.querySelector('#client-date');
+                const clientNameClone = docClone.querySelector('#client-name');
+                const clientTitleClone = docClone.querySelector('#client-title');
+                const storedClientName = localStorage.getItem('clientName') || '';
+                const storedClientTitle = localStorage.getItem('clientTitle') || '';
+
+                if (clientImgClone) clientImgClone.setAttribute('style', 'display:none;');
+                if (clientCanvasClone) clientCanvasClone.setAttribute('style', 'display:block;');
+                if (clientClearBtnClone) clientClearBtnClone.removeAttribute('disabled');
+                if (clientConfirmBtnClone) clientConfirmBtnClone.removeAttribute('disabled');
+                if (clientDateSpanClone) clientDateSpanClone.textContent = '_____________';
+                if (clientNameClone) {
+                    clientNameClone.removeAttribute('disabled');
+                    clientNameClone.setAttribute('value', storedClientName);
+                }
+                if (clientTitleClone) {
+                    clientTitleClone.removeAttribute('disabled');
+                    clientTitleClone.setAttribute('value', storedClientTitle);
+                }
+
+                // Remove this export/download button from the client copy
+                const exportBtnClone = docClone.querySelector('#export-pdf-btn');
+                const downloadBtnClone = docClone.querySelector('#download-client-html-btn');
+                if (exportBtnClone && exportBtnClone.parentNode) exportBtnClone.parentNode.removeChild(exportBtnClone);
+                if (downloadBtnClone && downloadBtnClone.parentNode) downloadBtnClone.parentNode.removeChild(downloadBtnClone);
+
+                // Serialize and download
+                const serializer = new XMLSerializer();
+                let htmlString = serializer.serializeToString(docClone);
+
+                // Add a simple note in the <title> for recipient clarity
+                htmlString = htmlString.replace('<title>', '<title>[Client-Signable] ');
+
+                const blob = new Blob([htmlString], { type: 'text/html;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'Agreement-for-Client-Signature.html';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                alert('Unable to generate the client-signable file in this browser.');
+            }
+        });
+    }
 });
 
 // Add fade-in styles dynamically
