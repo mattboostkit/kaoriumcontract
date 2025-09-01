@@ -141,6 +141,186 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('scroll', updateActiveLink);
     window.addEventListener('resize', updateActiveLink);
     updateActiveLink();
+
+    // -----------------------------
+    // Signature pads and PDF export
+    // -----------------------------
+
+    function formatHumanDate(date) {
+        const day = date.getDate();
+        const monthNames = [
+            'January','February','March','April','May','June','July','August','September','October','November','December'
+        ];
+        const month = monthNames[date.getMonth()];
+        const year = date.getFullYear();
+        return `${day} ${month} ${year}`;
+    }
+
+    function setupSignaturePad(opts) {
+        const canvas = document.getElementById(opts.canvasId);
+        const clearBtn = document.getElementById(opts.clearBtnId);
+        const confirmBtn = document.getElementById(opts.confirmBtnId);
+        const img = document.getElementById(opts.imgId);
+        const dateSpan = document.getElementById(opts.dateSpanId);
+
+        if (!canvas || !clearBtn || !confirmBtn || !img || !dateSpan) return;
+
+        const ctx = canvas.getContext('2d');
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#111827';
+
+        // Handle device pixel ratio for crisp lines
+        function resizeCanvas() {
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            const displayWidth = canvas.clientWidth || canvas.width;
+            const displayHeight = canvas.clientHeight || canvas.height;
+            canvas.width = displayWidth * ratio;
+            canvas.height = displayHeight * ratio;
+            canvas.style.width = displayWidth + 'px';
+            canvas.style.height = displayHeight + 'px';
+            ctx.scale(ratio, ratio);
+            ctx.lineWidth = 2;
+        }
+
+        // Initialize size based on attributes
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        let isDrawing = false;
+        let hasStroke = false;
+        let lastX = 0;
+        let lastY = 0;
+
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            if (e.touches && e.touches.length) {
+                return {
+                    x: e.touches[0].clientX - rect.left,
+                    y: e.touches[0].clientY - rect.top
+                };
+            }
+            return {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+        }
+
+        function start(e) {
+            isDrawing = true;
+            hasStroke = true;
+            const pos = getPos(e);
+            lastX = pos.x; lastY = pos.y;
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            e.preventDefault();
+        }
+
+        function move(e) {
+            if (!isDrawing) return;
+            const pos = getPos(e);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+            lastX = pos.x; lastY = pos.y;
+            e.preventDefault();
+        }
+
+        function end() {
+            isDrawing = false;
+        }
+
+        canvas.addEventListener('mousedown', start);
+        canvas.addEventListener('mousemove', move);
+        canvas.addEventListener('mouseup', end);
+        canvas.addEventListener('mouseleave', end);
+        canvas.addEventListener('touchstart', start, { passive: false });
+        canvas.addEventListener('touchmove', move, { passive: false });
+        canvas.addEventListener('touchend', end);
+
+        clearBtn.addEventListener('click', function() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            hasStroke = false;
+        });
+
+        confirmBtn.addEventListener('click', function() {
+            if (!hasStroke) {
+                alert('Please provide a signature before confirming.');
+                return;
+            }
+            const dataUrl = canvas.toDataURL('image/png');
+            img.src = dataUrl;
+            img.style.display = 'block';
+            canvas.style.display = 'none';
+            clearBtn.disabled = true;
+            confirmBtn.disabled = true;
+            if (opts.onConfirm) {
+                opts.onConfirm();
+            }
+            dateSpan.textContent = formatHumanDate(new Date());
+        });
+    }
+
+    // Client signature pad
+    setupSignaturePad({
+        canvasId: 'client-sign-canvas',
+        clearBtnId: 'client-clear-btn',
+        confirmBtnId: 'client-confirm-btn',
+        imgId: 'client-sign-img',
+        dateSpanId: 'client-date',
+        onConfirm: function() {
+            // Lock client name/title inputs after signing
+            const nameInput = document.getElementById('client-name');
+            const titleInput = document.getElementById('client-title');
+            if (nameInput) nameInput.setAttribute('disabled', 'disabled');
+            if (titleInput) titleInput.setAttribute('disabled', 'disabled');
+        }
+    });
+
+    // Developer signature pad
+    setupSignaturePad({
+        canvasId: 'dev-sign-canvas',
+        clearBtnId: 'dev-clear-btn',
+        confirmBtnId: 'dev-confirm-btn',
+        imgId: 'dev-sign-img',
+        dateSpanId: 'dev-date'
+    });
+
+    // Export PDF
+    const exportBtn = document.getElementById('export-pdf-btn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', async function() {
+            const { jsPDF } = window.jspdf || {};
+            if (!window.html2canvas || !jsPDF) {
+                alert('PDF export libraries failed to load. Please check your connection and try again.');
+                return;
+            }
+
+            const target = document.body;
+            const canvas = await html2canvas(target, { scale: 2, useCORS: true, scrollY: -window.scrollY });
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+            const imgWidth = pdfWidth;
+            const imgHeight = canvas.height * pdfWidth / canvas.width;
+
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pdfHeight;
+
+            while (heightLeft > 0) {
+                position -= pdfHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pdfHeight;
+            }
+
+            pdf.save('Software-Development-Agreement-SCENTMATIC.pdf');
+        });
+    }
 });
 
 // Add fade-in styles dynamically

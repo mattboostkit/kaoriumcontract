@@ -520,17 +520,39 @@
                     <div class="signature-line"></div>
                     <p>Matt West<br>
                     Boostkit<br>
-                    Date: _____________</p>
+                    Date: <span id="dev-date">_____________</span></p>
+                    <div class="signature-pad">
+                        <canvas id="dev-sign-canvas" class="signature-canvas" width="600" height="180"></canvas>
+                        <div class="signature-controls">
+                            <button id="dev-clear-btn" type="button">Clear</button>
+                            <button id="dev-confirm-btn" type="button">Confirm Signature</button>
+                        </div>
+                        <img id="dev-sign-img" class="signature-image" alt="Developer Signature" style="display:none;" />
+                    </div>
                 </div>
                 
                 <div class="signature-block">
                     <h3>CLIENT:</h3>
                     <div class="signature-line"></div>
-                    <p>Name: _____________<br>
-                    Title: _____________<br>
-                    SCENTMATIC Ltd.<br>
-                    Date: _____________</p>
+                    <p>
+                        Name: <input id="client-name" type="text" placeholder="Client Name" style="width: 100%; max-width: 320px;" /><br>
+                        Title: <input id="client-title" type="text" placeholder="Client Title" style="width: 100%; max-width: 320px;" /><br>
+                        SCENTMATIC Ltd.<br>
+                        Date: <span id="client-date">_____________</span>
+                    </p>
+                    <div class="signature-pad">
+                        <canvas id="client-sign-canvas" class="signature-canvas" width="600" height="180"></canvas>
+                        <div class="signature-controls">
+                            <button id="client-clear-btn" type="button">Clear</button>
+                            <button id="client-confirm-btn" type="button">Confirm Signature</button>
+                        </div>
+                        <img id="client-sign-img" class="signature-image" alt="Client Signature" style="display:none;" />
+                    </div>
                 </div>
+            </div>
+
+            <div class="signature-actions" style="margin-top: 1.5rem; text-align: right;">
+                <button id="export-pdf-btn" type="button">Export Signed PDF</button>
             </div>
         </section>
 
@@ -557,6 +579,8 @@
         </div>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

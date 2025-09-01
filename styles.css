@@ -1110,3 +1110,51 @@ ul li {
         display: none;
     }
 }
+
+/* Signature Pad */
+.signature-pad {
+    margin-top: 1rem;
+}
+
+.signature-canvas {
+    width: 100%;
+    max-width: 600px;
+    height: 180px;
+    background: #ffffff;
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+}
+
+.signature-controls {
+    margin-top: 0.75rem;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.signature-controls button,
+.signature-actions button {
+    background: var(--primary-purple);
+    color: #fff;
+    border: none;
+    padding: 0.6rem 1rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.signature-controls button:hover,
+.signature-actions button:hover {
+    background: var(--primary-dark);
+}
+
+.signature-image {
+    display: block;
+    margin-top: 0.75rem;
+    max-width: 600px;
+}
+
+.signature-actions {
+    display: flex;
+    justify-content: flex-end;
+}
