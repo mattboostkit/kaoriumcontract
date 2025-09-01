@@ -256,7 +256,24 @@ document.addEventListener('DOMContentLoaded', function() {
             if (opts.onConfirm) {
                 opts.onConfirm();
             }
-            dateSpan.textContent = formatHumanDate(new Date());
+            const dateStr = formatHumanDate(new Date());
+            dateSpan.textContent = dateStr;
+
+            // Persist to localStorage
+            try {
+                if (opts.storageKeyPrefix) {
+                    localStorage.setItem(`${opts.storageKeyPrefix}Signature`, dataUrl);
+                    localStorage.setItem(`${opts.storageKeyPrefix}SignedDate`, dateStr);
+                    if (opts.storageKeyPrefix === 'client') {
+                        const nameInput = document.getElementById('client-name');
+                        const titleInput = document.getElementById('client-title');
+                        if (nameInput) localStorage.setItem('clientName', nameInput.value || '');
+                        if (titleInput) localStorage.setItem('clientTitle', titleInput.value || '');
+                    }
+                }
+            } catch (e) {
+                // Ignore storage errors (private mode, quota, etc.)
+            }
         });
     }
 
@@ -267,6 +284,7 @@ document.addEventListener('DOMContentLoaded', function() {
         confirmBtnId: 'client-confirm-btn',
         imgId: 'client-sign-img',
         dateSpanId: 'client-date',
+        storageKeyPrefix: 'client',
         onConfirm: function() {
             // Lock client name/title inputs after signing
             const nameInput = document.getElementById('client-name');
@@ -282,8 +300,61 @@ document.addEventListener('DOMContentLoaded', function() {
         clearBtnId: 'dev-clear-btn',
         confirmBtnId: 'dev-confirm-btn',
         imgId: 'dev-sign-img',
-        dateSpanId: 'dev-date'
+        dateSpanId: 'dev-date',
+        storageKeyPrefix: 'dev'
     });
+
+    // Restore persisted signatures and client details
+    (function restoreSignatures() {
+        try {
+            // Client
+            const clientSig = localStorage.getItem('clientSignature');
+            const clientDate = localStorage.getItem('clientSignedDate');
+            const clientImg = document.getElementById('client-sign-img');
+            const clientCanvas = document.getElementById('client-sign-canvas');
+            const clientClear = document.getElementById('client-clear-btn');
+            const clientConfirm = document.getElementById('client-confirm-btn');
+            const clientDateSpan = document.getElementById('client-date');
+            const nameInput = document.getElementById('client-name');
+            const titleInput = document.getElementById('client-title');
+            const storedName = localStorage.getItem('clientName');
+            const storedTitle = localStorage.getItem('clientTitle');
+
+            if (storedName && nameInput) nameInput.value = storedName;
+            if (storedTitle && titleInput) titleInput.value = storedTitle;
+
+            if (clientSig && clientImg && clientCanvas && clientClear && clientConfirm && clientDateSpan) {
+                clientImg.src = clientSig;
+                clientImg.style.display = 'block';
+                clientCanvas.style.display = 'none';
+                clientClear.disabled = true;
+                clientConfirm.disabled = true;
+                clientDateSpan.textContent = clientDate || clientDateSpan.textContent;
+                if (nameInput) nameInput.setAttribute('disabled', 'disabled');
+                if (titleInput) titleInput.setAttribute('disabled', 'disabled');
+            }
+
+            // Developer
+            const devSig = localStorage.getItem('devSignature');
+            const devDate = localStorage.getItem('devSignedDate');
+            const devImg = document.getElementById('dev-sign-img');
+            const devCanvas = document.getElementById('dev-sign-canvas');
+            const devClear = document.getElementById('dev-clear-btn');
+            const devConfirm = document.getElementById('dev-confirm-btn');
+            const devDateSpan = document.getElementById('dev-date');
+
+            if (devSig && devImg && devCanvas && devClear && devConfirm && devDateSpan) {
+                devImg.src = devSig;
+                devImg.style.display = 'block';
+                devCanvas.style.display = 'none';
+                devClear.disabled = true;
+                devConfirm.disabled = true;
+                devDateSpan.textContent = devDate || devDateSpan.textContent;
+            }
+        } catch (e) {
+            // Ignore storage errors
+        }
+    })();
 
     // Export PDF
     const exportBtn = document.getElementById('export-pdf-btn');
